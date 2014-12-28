@@ -4,6 +4,11 @@
                 <record id="res_groups_printingprintoperator0" model="res.groups">
                         <field eval="&quot;&quot;&quot;Printing / Print Operator&quot;&quot;&quot;" name="name"/>
                 </record>
+                <!-- auto-add Administrator user to Print group -->
+                <record id="base.user_root" model="res.users">
+                    <field name="groups_id"
+                        eval="[(4, ref('res_groups_printingprintoperator0'))]"/>
+                </record>
                 <record id="ir_model_access_printingprintergroup1" model="ir.model.access">
                         <field name="model_id" ref="model_printing_printer"/>
                         <field eval="1" name="perm_read"/>

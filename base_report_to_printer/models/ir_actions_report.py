@@ -17,6 +17,7 @@ REPORT_TYPES = {"qweb-pdf": "pdf", "qweb-text": "text"}
 class IrActionsReport(models.Model):
     _inherit = "ir.actions.report"
 
+    raw_to_printer = fields.Boolean()
     property_printing_action_id = fields.Many2one(
         comodel_name="printing.action",
         string="Default Behaviour",
@@ -153,9 +154,12 @@ class IrActionsReport(models.Model):
             report = self.env["ir.actions.report"].browse(report_id)
             report.print_document(record_ids, data)
 
+    def _get_report_type(self):
+        return REPORT_TYPES(self.report_type)
+
     def print_document(self, record_ids, data=None):
         """Print a document, do not return the document file"""
-        report_type = REPORT_TYPES.get(self.report_type)
+        report_type = self._get_report_type()
         if not report_type:
             raise exceptions.UserError(
                 _("This report type (%s) is not supported by direct printing!")
@@ -182,9 +186,8 @@ class IrActionsReport(models.Model):
             title = self.report_name
         behaviour["title"] = title
         behaviour["res_ids"] = record_ids
-        # TODO should we use doc_format instead of report_type
         return printer.print_document(
-            self, document, doc_format=self.report_type, **behaviour
+            self, document, doc_format=doc_format, **behaviour
         )
 
     def _can_print_report(self, behaviour, printer, document):
@@ -246,8 +249,9 @@ class IrActionsReport(models.Model):
         can_print_report = report._can_print_report(behaviour, printer, document)
 
         if can_print_report:
+            report_type = "raw" if report.raw_to_printer else report.report_type
             printer.print_document(
-                report, document, doc_format=report.report_type, **behaviour
+                report, document, doc_format=report_type, **behaviour
             )
 
         return document, doc_format
